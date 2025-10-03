@@ -23,9 +23,10 @@ import org.apache.kafka.streams.state.internals.MeteredIterator;
 import org.apache.kafka.streams.state.internals.metrics.StateStoreMetrics;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class OpenIterators {
     private final TaskId taskId;
@@ -33,8 +34,8 @@ public class OpenIterators {
     private final String name;
     private final StreamsMetricsImpl streamsMetrics;
 
-    private final LongAdder numOpenIterators = new LongAdder();
     private final NavigableSet<MeteredIterator> openIterators = new ConcurrentSkipListSet<>(Comparator.comparingLong(MeteredIterator::startTimestamp));
+    private final AtomicLong oldestStartTimestamp = new AtomicLong();
 
     private MetricName metricName;
 
@@ -50,27 +51,31 @@ public class OpenIterators {
 
     public void add(final MeteredIterator iterator) {
         openIterators.add(iterator);
-        numOpenIterators.increment();
+        updateOldestStartTimestamp();
 
-        if (numOpenIterators.intValue() == 1) {
+        if (openIterators.size() == 1) {
             metricName = StateStoreMetrics.addOldestOpenIteratorGauge(taskId.toString(), metricsScope, name, streamsMetrics,
-                (config, now) -> {
-                    final var iterIter = openIterators.iterator();
-                    return iterIter.hasNext() ? iterIter.next().startTimestamp() : null;
-                }
+                (config, now) -> oldestStartTimestamp.get()
             );
         }
     }
 
     public void remove(final MeteredIterator iterator) {
-        if (numOpenIterators.intValue() == 1) {
-            streamsMetrics.removeMetric(metricName);
+        if (openIterators.size() == 1) {
+            streamsMetrics.removeStoreLevelMetric(metricName);
         }
-        numOpenIterators.decrement();
         openIterators.remove(iterator);
+        updateOldestStartTimestamp();
     }
 
     public long sum() {
-        return numOpenIterators.sum();
+        return openIterators.size();
+    }
+
+    private void updateOldestStartTimestamp() {
+        final Iterator<MeteredIterator> openIteratorsIterator = openIterators.iterator();
+        if (openIteratorsIterator.hasNext()) {
+            oldestStartTimestamp.set(openIteratorsIterator.next().startTimestamp());
+        }
     }
 }
