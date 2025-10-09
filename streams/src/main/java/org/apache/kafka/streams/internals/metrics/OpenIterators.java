@@ -54,7 +54,10 @@ public class OpenIterators {
 
         if (numOpenIterators.intValue() == 1) {
             metricName = StateStoreMetrics.addOldestOpenIteratorGauge(taskId.toString(), metricsScope, name, streamsMetrics,
-                (config, now) -> openIterators.first().startTimestamp()
+                (config, now) -> {
+                    final var iterIter = openIterators.iterator();
+                    return iterIter.hasNext() ? iterIter.next().startTimestamp() : null;
+                }
             );
         }
     }
