@@ -16,16 +16,16 @@
  */
 package org.apache.kafka.streams.internals.metrics;
 
-import java.util.Comparator;
-import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.LongAdder;
-
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.streams.processor.TaskId;
 import org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl;
 import org.apache.kafka.streams.state.internals.MeteredIterator;
 import org.apache.kafka.streams.state.internals.metrics.StateStoreMetrics;
+
+import java.util.Comparator;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.LongAdder;
 
 public class OpenIterators {
     private final TaskId taskId;
