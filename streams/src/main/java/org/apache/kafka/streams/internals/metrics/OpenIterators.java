@@ -52,25 +52,9 @@ public class OpenIterators {
     }
 
     public void add(final MeteredIterator iterator) {
-        openIterators.add(iterator);
-        numOpenIterators.increment();
-        updateOldestStartTimestamp();
-
-        if (numOpenIterators.intValue() == 1) {
-            metricName = StateStoreMetrics.addOldestOpenIteratorGauge(taskId.toString(), metricsScope, name, streamsMetrics,
-                (config, now) -> oldestStartTimestamp.get()
-            );
-        }
     }
 
     public void remove(final MeteredIterator iterator) {
-        if (numOpenIterators.intValue() == 1) {
-            streamsMetrics.removeMetric(metricName);
-            streamsMetrics.removeStoreLevelMetric(metricName);
-        }
-        numOpenIterators.decrement();
-        openIterators.remove(iterator);
-        updateOldestStartTimestamp();
     }
 
     public long sum() {
