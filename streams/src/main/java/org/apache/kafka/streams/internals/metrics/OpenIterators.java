@@ -50,22 +50,9 @@ public class OpenIterators {
     }
 
     public void add(final MeteredIterator iterator) {
-        openIterators.add(iterator);
-        updateOldestStartTimestamp();
-
-        if (openIterators.size() == 1) {
-            metricName = StateStoreMetrics.addOldestOpenIteratorGauge(taskId.toString(), metricsScope, name, streamsMetrics,
-                (config, now) -> oldestStartTimestamp.get()
-            );
-        }
     }
 
     public void remove(final MeteredIterator iterator) {
-        if (openIterators.size() == 1) {
-            streamsMetrics.removeStoreLevelMetric(metricName);
-        }
-        openIterators.remove(iterator);
-        updateOldestStartTimestamp();
     }
 
     public long sum() {
